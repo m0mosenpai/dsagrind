@@ -6,8 +6,7 @@ def part_1(data_list):
 	j = 0
 	trees = 0
 	while i < len(data_list):
-		if j > len(data_list[0]) - 1:
-			j = j % len(data_list[0])
+		j = j % len(data_list[0])
 
 		if data_list[i][j] == "#":
 			trees += 1
