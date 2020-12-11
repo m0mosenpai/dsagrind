@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# O(n) Time Complexity (Due to python's Timsort implementation which uses insertion sort for small arrays) | O(1) Space Complexity
+# O(n) Time Complexity | O(1) Space Complexity
 def part_1(data_list):
 	begin_preamble = 0
 	end_preamble = 25
