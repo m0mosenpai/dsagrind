@@ -20,6 +20,9 @@ def part_1(data_list):
 	return bus_id * min_to_departure
 
 # Got to know about the Chinese Remainder Theorem - couldn't figure out on my own this time.
+# Alternate method ->
+# We don't need to test every number for the time t. We first find the time that satisfies the condition
+# for the first bus. (t % id_1 == 0). Then, we can only check the multiples of id_1 for the next bus.
 def part_2(data_list):
 	cleaned_input = [(int(i),j) for j,i in enumerate(data_list[1].split(',')) if i != 'x']
 	
