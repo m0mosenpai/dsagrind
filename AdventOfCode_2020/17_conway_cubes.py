@@ -2,47 +2,43 @@
 
 from copy import deepcopy
 
-def get_active_count(neighbors, state):
-    count_active = 0
-    for n in neighbors:
-        if n in state.keys():
-            count_active += 1
-
-    return count_active
-
-def generate_neighbors(cc):
+def gen_nbrs(cc, state, active_cnt):
     cc_x, cc_y, cc_z = cc
-    neighbors = []
+    nbrs = []
 
     for i in range(-1, 2):
         for j in range(-1, 2):
             for k in range(-1, 2):
                 if (cc_x + i, cc_y + j, cc_z + k) != cc:
-                    neighbors.append((cc_x + i, cc_y + j, cc_z + k))
+                    nbrs.append((cc_x + i, cc_y + j, cc_z + k))
+                    if (cc_x + i, cc_y + j, cc_z + k) in state.keys():
+                        active_cnt[0] += 1
 
-    return neighbors
+    return nbrs
 
-def generate_neighbors_4d(cc):
+def gen_nbrs_4d(cc, state, active_cnt):
     cc_x, cc_y, cc_z, cc_w = cc
-    neighbors = []
+    nbrs = []
 
     for i in range(-1, 2):
         for j in range(-1, 2):
             for k in range(-1, 2):
                 for w in range(-1, 2):
                     if (cc_x + i, cc_y + j, cc_z + k, cc_w + w) != cc:
-                        neighbors.append((cc_x + i, cc_y + j, cc_z + k, cc_w + w))
+                        nbrs.append((cc_x + i, cc_y + j, cc_z + k, cc_w + w))
+                        if (cc_x + i, cc_y + j, cc_z + k, cc_w + w) in state.keys():
+                            active_cnt[0] += 1
 
-    return neighbors
+    return nbrs
 
-def check_neighbors(cc, state, new_state, neighbors, visited):
+def check_nbrs(cc, active_cnt, state, new_state, visited):
     if cc not in visited.keys():
-        active = get_active_count(neighbors, state)
-
-        if cc not in state.keys() and active == 3:
+        if cc not in state.keys() and active_cnt[0] == 3:
             new_state[cc] = 1
-        elif cc in state.keys() and (active != 2 and active != 3):
+            active_cnt[0] += 1
+        elif cc in state.keys() and (active_cnt[0] != 2 and active_cnt[0] != 3):
             del new_state[cc]
+            active_cnt[0] -= 1
 
         visited[cc] = 1
 
@@ -68,11 +64,13 @@ def run_simulation(data_list, dmns):
     for _ in range(6):
         visited = {}
         for cc, val in state.items():
-            neighbors = generate_neighbors(cc) if dmns == 3 else generate_neighbors_4d(cc)
-            check_neighbors(cc, state, new_state, neighbors, visited)
-            for n in neighbors:
-                n_neighbors = generate_neighbors(n) if dmns == 3 else generate_neighbors_4d(n)
-                check_neighbors(n, state, new_state, n_neighbors, visited)
+            active = [0]
+            nbrs = gen_nbrs(cc, state, active) if dmns == 3 else gen_nbrs_4d(cc, state, active)
+            check_nbrs(cc, active, state, new_state, visited)
+            for n in nbrs:
+                active = [0]
+                n_nbrs = gen_nbrs(n, state, active) if dmns == 3 else gen_nbrs_4d(n, state, active)
+                check_nbrs(n, active, state, new_state, visited)
 
         state = deepcopy(new_state)
 
