@@ -1,2 +1,2 @@
 # dsagrind
-A personal collection of all DSA scripts made for courses and general practice.
+DSA Practice, CTF Write-ups, Learning Challenges and more!
