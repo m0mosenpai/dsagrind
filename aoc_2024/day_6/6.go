@@ -8,11 +8,11 @@ import (
 )
 
 var x, y int
-var maze = make([]string, 0)
 var maze_map = make(map[dir]string)
 var curr_dir dir
 var positions int = 0
 var player string = "^"
+var path = make([]dir, 0)
 
 type dir struct {
     x int
@@ -33,11 +33,24 @@ var player_map = map[string]string{
     "<" : "^",
 }
 
-func move(i *int, j *int) {
-    maze_map[dir{x: *i, y: *j}] = "X"
-    *i += curr_dir.x
-    *j += curr_dir.y
-    maze_map[dir{x: *i, y: *j}] = player
+func setStartPosition(pos *dir) {
+    // facing up at the start
+    curr_dir.x = -1
+    curr_dir.y = 0
+
+    for c, v := range(maze_map) {
+        if v == "^" {
+            pos.x = c.x
+            pos.y = c.y
+            positions++
+            return
+        }
+    }
+}
+
+func move(pos *dir) {
+    pos.x += curr_dir.x
+    pos.y += curr_dir.y
 }
 
 func turnRight() {
@@ -45,14 +58,26 @@ func turnRight() {
     player = player_map[player]
 }
 
-func checkObstacle(i int, j int) bool {
+func checkObstacle(pos dir) bool {
+    var i, j int = pos.x, pos.y
     if ((i < x && i >= 0) && (j < y && j >= 0) && maze_map[dir{x: i, y: j}] == "#") {
         return true
     }
     return false
 }
 
-func createMazeMap(x int, y int) {
+func canCreateLoop(pos dir, visited map[dir][]dir) bool {
+    for !checkObstacle(pos) {
+        dirs := visited[pos]
+        fmt.Println(dirs)
+        // for d := range dirs {
+        // }
+        move(&pos)
+    }
+    return false
+}
+
+func createMazeMap(maze []string) {
     for i := range x {
         for j := range y {
             maze_map[dir{x: i, y: j}] = string(maze[i][j])
@@ -74,56 +99,51 @@ func renderMaze() {
 
 
 func main() {
-    f, err := os.ReadFile("6.in")
+    f, err := os.ReadFile("6.ex")
     if err != nil {
         fmt.Println(err)
         return
     }
     data := string(f)
+
+    var maze = make([]string, 0)
     maze = strings.Split(data, "\n")
 
     x, y = len(maze) - 1, len(maze[0])
-    var visited = make(map[dir]int)
-    createMazeMap(x, y)
+    var visited = make(map[dir][]dir)
+    createMazeMap(maze)
 
-    // facing up in the start
-    curr_dir.x = -1
-    curr_dir.y = 0
-
-    // get start position
-    var start dir
-    for c, v := range(maze_map) {
-        if v == "^" {
-            start.x = c.x
-            start.y = c.y
-            visited[c] = 1
-            positions++
-            break
-        }
-    }
-    fmt.Printf("Starting Position: (%d, %d)\n", start.x, start.y)
+    // set start position
+    var pos dir
+    setStartPosition(&pos)
+    visited[pos] = append(visited[pos], curr_dir)
+    fmt.Printf("Starting Position: (%d, %d)\n", pos.x, pos.y)
 
     // traverse
-    var i, j int = start.x, start.y
-    for i >= 0 && i < x && j >= 0 && j < y {
-        // display maze
-        // renderMaze()
+    for pos.x >= 0 && pos.x < x && pos.y >= 0 && pos.y < y {
 
-        // mark current pos as visited
-        if visited[dir{x: i, y: j}] != 1 {
+        // visit cell
+        _, haveVisited := visited[pos]
+        if !haveVisited {
             positions++
         }
-        visited[dir{x: i, y: j}] = 1
+        visited[pos] = append(visited[pos], curr_dir)
+
+        // canCreateLoop(pos, visited)
 
         // check for obstacles
-        if checkObstacle(i + curr_dir.x, j + curr_dir.y) {
+        if checkObstacle(dir{x: pos.x + curr_dir.x, y: pos.y + curr_dir.y}) {
             turnRight()
         } else {
-            // step ahead
-            move(&i, &j)
+            // step ahead and log path
+            path = append(path, pos)
+            maze_map[pos] = "X"
+            move(&pos)
+            maze_map[pos] = player
         }
 
     }
     renderMaze()
+    fmt.Println("Visited:", visited)
     fmt.Println("Part-1:", positions)
 }
